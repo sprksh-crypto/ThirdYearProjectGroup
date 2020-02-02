@@ -12,7 +12,7 @@ public class GravityBody : MonoBehaviour
 
     // Allow user to tweak
     public Vector3 initVelocity; // Allow input via inspector
-    public GravityBody OrbitTarget; // The body that THIS body will orbit around (drag and drop at inspector)
+    public GravityBody OrbitTarget = null; // The body that THIS body will orbit around (drag and drop at inspector)
     public Vector3 OrbitNormal;
 
     // G - arbitrary
@@ -38,6 +38,8 @@ public class GravityBody : MonoBehaviour
     void Start()
     {
 
+
+
         foreach (GravityBody body in AllBodies)
         {
 
@@ -48,6 +50,7 @@ public class GravityBody : MonoBehaviour
                 if (OrbitNormal == Vector3.zero)
                 {
                     OrbitNormal = new Vector3(0, 1, 0);
+                    Debug.Log("Creating normal vector");
                 }
                 SetOrbitalVelocity(OrbitNormal);
             }
@@ -61,7 +64,7 @@ public class GravityBody : MonoBehaviour
     public void Attract(GravityBody gb)
     {
         // Vector from target body to this body
-        Vector3 r_to_this = gb.bodyTransform.position - this.bodyTransform.position;
+        Vector3 r_to_this = this.bodyTransform.position - gb.bodyTransform.position;
 
         // Newton's law of gravitation
         Vector3 force = r_to_this * G * gb.GetMass() * this.GetMass() / Mathf.Pow(r_to_this.magnitude, 3);
