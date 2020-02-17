@@ -1,0 +1,72 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class planets : MonoBehaviour          //This should work for moons too.
+{
+    //Code done in reverse chronological order.
+    public static List<planets> bodies;
+    const float G = 6.674f;
+    public Rigidbody rb;
+    GameObject Sun;
+    float SunMass;
+    Transform SunTransform;
+    //The masses are scaled by 10^22 and the distances are in AU * 10^3. I tried to make them accurate but my laptop can't handle it, it outputs errors.
+    const float convertmass = 1E22f;
+    const float convertdistance = 1.5E8f;
+
+    //This section calculates initial velocity.
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        Sun = GameObject.Find("Sun");
+        SunMass = Sun.GetComponent<Rigidbody>().mass;                                                      //These 'Sun' variables needed to be previously and seperately defined; otherwise by calling these properties as extensions of "Sun" it yields a 'stackoverflow' error.
+        SunTransform = Sun.GetComponent<Transform>();                                                     //Needed to call position as a property of 'Transform' instead of as a property of 'Rigidbody'; Unity doesn't deal with it well otherwise, produces errors.
+
+        if (this.gameObject.name != "Sun")
+        {
+            Vector3 r = rb.position - SunTransform.position;
+            float magnitude = r.magnitude;
+            Vector3 unitTangent = Vector3.Cross(new Vector3(0, 1, 0), r.normalized);
+            Vector3 orbitalVelocity = Mathf.Sqrt(G * SunMass / magnitude) * unitTangent;
+            rb.velocity = orbitalVelocity;
+        }
+    }
+
+    //This section calculates gravitation for massive bodies, here: namely, the planets.
+    void FixedUpdate()
+    {
+        foreach (planets Body in bodies)
+        {
+            if (Body != this)
+                Attract(Body);
+        }
+    }
+    void OnEnable()
+    {
+        if (bodies == null)
+            bodies = new List<planets>();
+
+        bodies.Add(this);
+    }
+
+    void OnDisable()
+    {
+        bodies.Remove(this);
+    }
+    void Attract(planets objToAttract)
+    {
+        Rigidbody rbToAttract = objToAttract.rb;
+
+        Vector3 direction = rb.position - rbToAttract.position;
+        float distance = direction.magnitude;
+
+        if (distance == 0f)
+            return;
+
+        float forceMagnitude = G * (rb.mass * rbToAttract.mass) / Mathf.Pow(distance, 2);
+        Vector3 force = direction.normalized * forceMagnitude;
+
+        rbToAttract.AddForce(force);
+
+    }
