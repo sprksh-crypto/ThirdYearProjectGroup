@@ -1,43 +1,160 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CamManager : MonoBehaviour
 {
-    public static Camera[] cameras;
-    private int currentCameraIndex = 0;
+    public static List<Camera> cameras = new List<Camera>();
+    public static Camera[] allCams;
+
+    public static int currentCameraIndex = 0;
+
+    private static CamMovement currentCamMovement;
+
+    private CamManager instance = null;
+
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else if (instance != this)
+        {
+            Destroy(this);
+        }
+
+        allCams = FindObjectsOfType<Camera>();
+        for (int i = 0; i < allCams.Length; i++)
+        {
+            cameras.Add(allCams[i]);
+        }
+        UseCam(cameras[currentCameraIndex]);
+        UpdateTextUI();
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        cameras = FindObjectsOfType<Camera>();
-        for (int i = 1; i < cameras.Length; i++)
-        {
-            cameras[i].gameObject.SetActive(false);
-        }
-
-        if (cameras.Length > 0)
-        {
-            cameras[0].gameObject.SetActive(true);
-        }
+        PrintCameraNames();
     }
 
-    private void InputChangeCam()
+    private static void UpdateTextUI()
     {
-        if (Input.GetKeyUp(KeyCode.C))
+        InfoUI.SetCameraText(cameras[currentCameraIndex].transform.root.gameObject.name);
+    }
+
+    public static void UpdateTextUI(string text)
+    {
+        InfoUI.SetCameraText(text);
+    }
+
+    public static void RemoveCam(Camera cam)
+    {
+        int removeIndex = 0;
+        foreach (Camera c in cameras)
         {
-            cameras[currentCameraIndex].gameObject.SetActive(false);
-            currentCameraIndex += 1;
-            if (currentCameraIndex == cameras.Length)
+            if (c == cam)
             {
-                currentCameraIndex = 0;
+                if (currentCameraIndex == removeIndex)
+                {
+                    ChangeNextCam();
+                    if (currentCameraIndex != 0)
+                    {
+                        currentCameraIndex--;
+                    }
+                }
+                cameras.RemoveAt(removeIndex);
+                return;
             }
-            cameras[currentCameraIndex].gameObject.SetActive(true);
+            removeIndex++;
         }
+        PrintCameraNames();
     }
 
-    // Update is called once per frame
-    void FixedUpdate()
+    public static CamMovement GetCurrentCameraMover()
     {
-        InputChangeCam();
+        return cameras[currentCameraIndex].GetComponent<CamMovement>();
+    }
+
+    public static void UseCam(Camera cam)
+    {
+        bool foundCam = false;
+        int indexer = 0;
+        foreach (Camera c in cameras)
+        {
+            if (c == cam)
+            {
+                c.gameObject.SetActive(true);
+                currentCameraIndex = indexer;
+                foundCam = true;
+                currentCamMovement = GetCurrentCameraMover();
+            }
+
+            else
+            {
+                c.gameObject.SetActive(false);
+            }
+            indexer++;
+        }
+
+        if (!foundCam)
+        {
+            throw new System.ArgumentException("Could not find camera: " + cam.gameObject.name);
+        }
+        return;
+    }
+
+    public static void ChangeNextCam()
+    {
+        cameras[currentCameraIndex].gameObject.SetActive(false);
+        currentCameraIndex++;
+        if (currentCameraIndex >= cameras.Count)
+        {
+            currentCameraIndex = 0;
+        }
+        cameras[currentCameraIndex].gameObject.SetActive(true);
+        currentCamMovement = GetCurrentCameraMover();
+        UpdateTextUI();
+        Debug.Log("Changing camera to " + cameras[currentCameraIndex].transform.root.gameObject.name);
+    }
+
+    public void ChangeNextCam_()
+    {
+        cameras[currentCameraIndex].gameObject.SetActive(false);
+        currentCameraIndex++;
+        if (currentCameraIndex >= cameras.Count)
+        {
+            currentCameraIndex = 0;
+        }
+        cameras[currentCameraIndex].gameObject.SetActive(true);
+        currentCamMovement = GetCurrentCameraMover();
+        UpdateTextUI();
+
+    }
+
+    public void ZoomInCam()
+    {
+        currentCamMovement.ZoomIn();
+    }
+
+    public void ZoomOutCam()
+    {
+        currentCamMovement.ZoomOut();
+    }
+
+    static void PrintCameraNames()
+    {
+        List<string> camNames = new List<string>
+        {
+            "Camera list: "
+        };
+        foreach (Camera cam in cameras)
+        {
+            camNames.Add(cam.transform.root.name + " | ");
+        }
+        Debug.Log(string.Join("", camNames));
     }
 }
