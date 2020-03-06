@@ -1,13 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+using System;
 
 public class GravityBody : MonoBehaviour
 {
 
     // STATIC VARIABLES //
     // G - arbitrary
-    public static float G = 1000f;
+    public static float G = 5000000f;
+
+    public static float defaultG = G;
 
     // List of all gravitational objects
     public static List<GravityBody> AllBodies = new List<GravityBody>();
@@ -20,12 +24,17 @@ public class GravityBody : MonoBehaviour
     private Rigidbody rb;
 
     // User input variables
-    public GravityBody OrbitTarget = null; // The body that THIS body will orbit around (drag and drop at inspector)
-    public Vector3 OrbitNormal;  // The normal vector to the plane of orbit
+    public GravityBody orbitTarget = null; // The body that THIS body will orbit around (drag and drop at inspector)
+    public Vector3 orbitNormal;  // The normal vector to the plane of orbit
     public Vector3 initVelocity; // Allow input via inspector
+    public float semiMajorAxis;
     private int numOrbitParents;
 
     private float radius;
+
+    // Record data variables
+    public bool recordData;
+    private string saveFilePath;
 
     // Called before Start()
     private void Awake()
@@ -39,12 +48,21 @@ public class GravityBody : MonoBehaviour
         AllBodies.Add(this);
         totalBodies++;
 
-        FindNumberOfOrbitParents(); 
+        orbitNormal.Normalize();
+
+        FindNumberOfOrbitParents();
+
+        if (recordData)
+        {
+            distanceFromOrbitTargetData = new List<float>();
+            energyData = new List<float>();
+            CreateSaveFile();
+        }
     }
 
     private void Start()
     {
-        // Ensure that this operation is only done once across all instances
+        // Ensure that this operation is only done once
         if (!listSorted)
         {
             SortGBList();
@@ -64,15 +82,20 @@ public class GravityBody : MonoBehaviour
                 this.Attract(body);
             }
         }
+
+        if (recordData)
+        {
+            RecordData();
+        }
     }
 
     private void FindNumberOfOrbitParents()
     {
-        GravityBody target = OrbitTarget;
+        GravityBody target = orbitTarget;
         while (target != null)
         {
             numOrbitParents++;
-            target = target.OrbitTarget;
+            target = target.orbitTarget;
         }
     }
 
@@ -85,13 +108,17 @@ public class GravityBody : MonoBehaviour
     // Attract another gravitational body
     public void Attract(GravityBody gb)
     {
-        Vector3 r_to_this = this.bodyTransform.position - gb.bodyTransform.position;
+        if (gb != null)
+        {
+            Vector3 r_to_this = this.bodyTransform.position - gb.bodyTransform.position;
 
-        // Newton's law of gravitation
-        Vector3 force = r_to_this * G * gb.rb.mass * this.rb.mass / Mathf.Pow(r_to_this.magnitude, 3);
-        gb.SetForceTo(force);
+            // Newton's law of gravitation
+            Vector3 force = r_to_this * G * gb.rb.mass * this.rb.mass / Mathf.Pow(r_to_this.magnitude, 3);
+            gb.SetForceTo(force);
+        }
     }
 
+    // Sets initial velocites for all gravity bodies, in order of how many orbital target parents they have
     private static void SetInitialVelocities()
     {
         foreach (GravityBody gb in AllBodies)
@@ -102,33 +129,42 @@ public class GravityBody : MonoBehaviour
 
                 if (gb.numOrbitParents >= 1)
                 {
-                    gb.initVelocity += gb.OrbitTarget.initVelocity;
+                    gb.initVelocity += gb.orbitTarget.initVelocity;
                 }
-                gb.SetVelocityTo(gb.initVelocity);
             }
+            gb.SetVelocityTo(gb.initVelocity);
         }
+    }
+
+    // If has a target and doesn't have a user given initial velocity
+    private bool UsesOrbitalVelocity()
+    {
+        return (orbitTarget != null && initVelocity == Vector3.zero);
     }
 
     // Set this body's initial velocity to orbit around its target, where orbital plane is defined by its tangent vector OrbitNormal
     private void SetInitVelocityToOrbital()
     {
-        if (OrbitNormal == Vector3.zero)
+        Vector3 orbitalVelocity;
+        if (orbitNormal == Vector3.zero)
         {
-            OrbitNormal = new Vector3(0, 1, 0);
+            orbitNormal = new Vector3(0, 1, 0);
         }
 
-        Vector3 r_to_this = this.bodyTransform.position - OrbitTarget.bodyTransform.position;
+        Vector3 r_to_this = this.bodyTransform.position - orbitTarget.bodyTransform.position;
         float distance = r_to_this.magnitude;
-        Vector3 tangentUnitToOrbitalPlane = Vector3.Cross(OrbitNormal, r_to_this.normalized);
-        Vector3 orbitalVelocity = Mathf.Sqrt(G * OrbitTarget.rb.mass / distance) * tangentUnitToOrbitalPlane;
+        Vector3 tangentUnitToOrbitalPlane = Vector3.Cross(orbitNormal, r_to_this.normalized);
+
+        if (semiMajorAxis == 0)
+        {
+            semiMajorAxis = distance;
+        }
+
+        // Using the Vis Viva equation, which generalises to arbitrary semi major axis (for circulator orbit, semi major axis is current distance)
+        orbitalVelocity = Mathf.Sqrt((G * orbitTarget.rb.mass) *  ((2 / distance) - (1 / (semiMajorAxis))))  * tangentUnitToOrbitalPlane;
 
         // Setting this body's initial velocity as the calculated orbit velocity
         initVelocity = orbitalVelocity;
-    }
-
-    private bool UsesOrbitalVelocity()
-    {
-        return (OrbitTarget != null && initVelocity == Vector3.zero);
     }
 
     // Print list of the names of all the gravitational bodies in console
@@ -145,6 +181,47 @@ public class GravityBody : MonoBehaviour
         Debug.Log(string.Join("", gbNames));
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        GravityBody gbOther = other.GetComponent<GravityBody>();
+        if (this.rb.mass > gbOther.rb.mass)
+        {
+            Destroy(other.gameObject);
+        }
+    }
+
+    // Currently records distance from orbit target
+    // Can be modified to record energy
+    private void RecordData()
+    {
+        currentEnergy = 0f;
+        foreach (GravityBody gb in AllBodies)
+        {
+            if (gb != this)
+            {
+                currentEnergy += -G * gb.rb.mass / Vector3.Distance(gb.bodyTransform.position, this.bodyTransform.position);
+            }
+        }
+
+        float distance = Vector3.Distance(orbitTarget.bodyTransform.position, this.bodyTransform.position);
+
+        File.AppendAllText(saveFilePath, distance.ToString() + "\n");
+        //energyData.Add(currentEnergy);
+        //distanceFromOrbitTargetData.Add(Vector3.Distance(orbitTarget.bodyTransform.position, this.bodyTransform.position));
+    }
+
+    // Creates a text file at the location /Assets/PlanetData/planetname.txt
+    private void CreateSaveFile()
+    {
+        saveFilePath = String.Format("{0}/PlanetData/{1}.txt", Application.dataPath, transform.name);
+
+        if (File.Exists(saveFilePath))
+        {
+            File.WriteAllText(saveFilePath, "");
+        }
+    }
+
+
     //// Get Set methods ////
     public void SetVelocityTo(Vector3 velocity)
     {
@@ -158,7 +235,7 @@ public class GravityBody : MonoBehaviour
 
     public Transform GetTransform()
     {
-        return this.bodyTransform;
+        return this.transform;
     }
 
     public float GetRadius()
