@@ -54,8 +54,6 @@ public class GravityBody : MonoBehaviour
 
         if (recordData)
         {
-            distanceFromOrbitTargetData = new List<float>();
-            energyData = new List<float>();
             CreateSaveFile();
         }
     }
@@ -194,7 +192,7 @@ public class GravityBody : MonoBehaviour
     // Can be modified to record energy
     private void RecordData()
     {
-        currentEnergy = 0f;
+        float currentEnergy = 0f;
         foreach (GravityBody gb in AllBodies)
         {
             if (gb != this)
@@ -205,9 +203,8 @@ public class GravityBody : MonoBehaviour
 
         float distance = Vector3.Distance(orbitTarget.bodyTransform.position, this.bodyTransform.position);
 
+        // Append the distance and add a new line character -> "\n"
         File.AppendAllText(saveFilePath, distance.ToString() + "\n");
-        //energyData.Add(currentEnergy);
-        //distanceFromOrbitTargetData.Add(Vector3.Distance(orbitTarget.bodyTransform.position, this.bodyTransform.position));
     }
 
     // Creates a text file at the location /Assets/PlanetData/planetname.txt
