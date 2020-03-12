@@ -1,0 +1,90 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Gravityss2 : MonoBehaviour
+{
+    //use this to define variables that are acc being used!!!
+
+
+    //test variables
+    public float ForceMagnitude;
+    public float Accel;
+    public float whereis;
+    public float seperation;
+
+
+    public Vector3 initialvelocity;
+    const float G = 6.674e-1f; //used to speed up gravity process
+    const float SunMew = 220;
+    public float SemiMajorAxis;
+
+
+    public static List<Gravityss2> Planets; //make a list of attracting bodies
+
+    public Rigidbody rb;
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+        rb.velocity = initialvelocity;
+    }
+
+    void FixedUpdate()
+    {
+        Vector3 pos = rb.position; //creates a vector containing the position of a planet
+        float position = pos.magnitude; //finds the magnitude of that vector and converts it to a float
+        foreach (Gravityss2 planet in Planets) //this small for loop calls the attract function for each planet
+        {
+            if (planet != this)
+                Attract(planet);
+            whereis = rb.position.magnitude;
+            if (seperation != 0)
+                CiruclarOrbit(planet);
+        }
+    }
+
+    void OnEnable() //speeds up the process  by only adding features to the list when necessary
+    {
+        if (Planets == null) //reduces redundancies by only adding planets to a list to be used if they are new planets
+            Planets = new List<Gravityss2>();
+
+        Planets.Add(this);
+    }
+
+    private void OnDisable() //removes the planet from the list after it has been used
+    {
+        Planets.Remove(this);
+    }
+
+    void CiruclarOrbit(Gravityss2 PlanetToAttract)
+    {
+        Vector3 displacement = rb.position;
+        float seperation = displacement.magnitude; //calculates the seperation of planets
+
+        if (seperation != 0)
+            initialvelocity.z = Mathf.Sqrt(SunMew / seperation);
+        rb.velocity = initialvelocity;
+    }
+
+    void EllipticalOrbit(Gravityss2 PlanetToAttract)
+    {
+        Vector3 displacement = rb.position;
+        float seperation = displacement.magnitude;
+
+        initialvelocity.z = Mathf.Sqrt(SunMew * ((2 / seperation) - (1 / SemiMajorAxis)));
+    }
+    void Attract(Gravityss2 PlanetToAttract)
+    {
+        Rigidbody rbToAttract = PlanetToAttract.rb; //considers the attracting planet as a rigidbody
+
+        Vector3 displacement = rb.position - rbToAttract.position; //calculates the displacement between planets
+        float seperation = displacement.magnitude; //calculates the seperation of planets
+
+        ForceMagnitude = ((rb.mass * rbToAttract.mass) * G) / Mathf.Pow(seperation, 2); //calculates the magnitude of the gravity
+        //float acc = ForceMagnitude / rb.mass;
+
+        Vector3 force = displacement.normalized * ForceMagnitude; //converts the force into a vector
+        rbToAttract.AddForce(force); //adds the force vector
+        Accel = ForceMagnitude / 330000;
+    }
+}
