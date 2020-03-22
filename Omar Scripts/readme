@@ -1,4 +1,9 @@
 Uploaded my Script for Spaceship movements: "Flying.cs". 
-//Note: Annimations need to be created on the Annimation Window of Unity3D. 
 
-Uploaded my Script for Initial Velocity:    "SetInitialOrbitalVelocity".  
+
+Uploaded my Script for Initial Velocity:    "SetInitialOrbitalVelocity".  (OLD VERSION)
+
+22/03/2020:
+Uploaded Prefab of my Shuttle to be used in the final Group Project. Prefab Contains Shuttle, 'Engines', Camera and neccesary components. 
+Uploaded the Animation files as well as the controller file. 
+Attach the Flying.sc to Camera, NOT the Spaceship/Shuttle. 
