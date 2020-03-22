@@ -8,7 +8,7 @@ Here I have uploaded all files pertaning to my Space Ship, for the final group p
 
 The file named:
 ```
-Omar Shuttle Prefab
+Omar Shuttle Prefab.prefab
 ```
 Is the Prefab that containts the 3D Shuttle, 'Engines', the Camera and other neccesary components. 
 
