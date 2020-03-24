@@ -1,6 +1,7 @@
 # **Omar Khawaja** VR Astrophysics Project
 
-Here I will be uploading my project files. I will do my best to keep files organised, and will upload the final version of my scripts closer to the end of the Project as I will be making continous changes. Sicne I have a lot of files, it may be easier for me to upload everything to the my own Git Respository near the end. 
+Here I will be uploading my project files. I will do my best to keep files organised, and will upload the final version of my scripts closer to the end of the Project as I will be making continous changes.
+Note: *Sicne I have a lot of files, it may be easier for me to upload everything to the my own Git Respository near the end - TBC.*
 
 # *Scripts*
 ### Intial Velocity 
@@ -52,7 +53,7 @@ Flying.sc
 
 * TBC
 
-### Galaxy Introduction 
+### UI
 
 * TBC
 
