@@ -39,11 +39,11 @@ Is the Prefab that containts the 3D Shuttle, 'Engines', the Camera set-up and ot
 
 All the Animation files as well as the controller file is uploaded. 
 
-Attach the:
+The following script:
 ```
 Flying.sc
 ``` 
-* This controls the movements of the Space Ship.
+controls the movements of the Space Ship.
 
 ### Scenes 
 
