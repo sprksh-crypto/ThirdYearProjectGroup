@@ -4,7 +4,7 @@ Here I will be uploading my project files. I will do my best to keep files organ
 Note: *Sicne I have a lot of files, it may be easier for me to upload everything to the my own Git Respository near the end - TBC.*
 
 # *Scripts*
-### Intial Velocity 
+### Initial Velocity 
 
 ```
 SetInitialOrbitalVelocity.sc
