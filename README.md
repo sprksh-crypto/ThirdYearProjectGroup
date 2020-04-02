@@ -4,12 +4,12 @@ Due ```20 - 24th April```
 
 ## TODO: 
 
-* Yige: Mini-game
+* **Yige**: Mini-game
 
-* Omar and Ashwin: Space Ship Mode 
+* **Omar** and **Ashwin**: Space Ship Mode 
 
-* Duncan: Phenomena 
+* **Duncan**: Phenomena 
 
-* JJ and Swathi: Menu and Stats
+* **JJ** and **Swathi**: Menu and Stats
 
 * ... 
