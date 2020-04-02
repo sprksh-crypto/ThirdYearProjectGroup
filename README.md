@@ -1,9 +1,9 @@
 # Group Project: Solar System
 
-Due ```20 - 24th April```
+Due ```20 - 24th April``` *TBC
 
 Final Project Video [Link](https://www.google.com)
-(To be added here)
+(to be added here)
 
 ## TODO: 
 
@@ -15,4 +15,4 @@ Final Project Video [Link](https://www.google.com)
 
 * **JJ** and **Swathi**: Menu and Stats
 
-* ... 
+* etc ... 
